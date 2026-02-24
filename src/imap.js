@@ -1,18 +1,13 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-Gio._promisify(Gio.SocketClient.prototype, 'connect_to_host_async', 'connect_to_host_finish');
-Gio._promisify(Gio.InputStream.prototype, 'read_bytes_async', 'read_bytes_finish');
-Gio._promisify(Gio.OutputStream.prototype, 'write_bytes_async', 'write_bytes_finish');
-
-
 export class ImapClient {
-    constructor({ host, port = 993, username, password, useTls = true, cancellable, logger }) {
+    constructor({ host, port, username, password, useStartTls = false, cancellable, logger }) {
         this._host = host;
         this._port = port;
         this._username = username;
         this._password = password;
-        this._useTls = useTls;
+        this._useStartTls = useStartTls;
         this._cancellable = cancellable;
         this._logger = logger;
         this._connection = null;
@@ -24,29 +19,59 @@ export class ImapClient {
 
     async connect() {
         const client = new Gio.SocketClient();
-
-        if (this._useTls) {
-            client.set_tls(true);
-        }
+        client.set_timeout(10);
 
         this._connection = await client.connect_to_host_async(
             `${this._host}:${this._port}`,
             this._port,
-            this._cancellable
+            this._cancellable,
         );
+
+        if (!this._useStartTls) {
+            await this._handshakeTls();
+        }
 
         this._input = this._connection.get_input_stream();
         this._output = this._connection.get_output_stream();
 
-        // Read greeting
         await this._readResponse();
 
-        // Login
+        if (this._useStartTls) {
+            await this._upgradeToTls();
+        }
+
         await this._login();
     }
 
+    async _handshakeTls() {
+        const identity = Gio.NetworkAddress.new(this._host, this._port);
+        const tlsConnection = Gio.TlsClientConnection.new(this._connection, identity);
+        // Accept self-signed certificates for localhost (e.g. ProtonMail Bridge)
+        if (this._host === '127.0.0.1' || this._host === 'localhost') {
+            tlsConnection.connect('accept-certificate', () => true);
+        }
+        await tlsConnection.handshake_async(GLib.PRIORITY_DEFAULT, this._cancellable);
+        this._connection = tlsConnection;
+    }
+
+    async _upgradeToTls() {
+        const response = await this._sendCommand('STARTTLS');
+        if (!response.includes('OK')) {
+            throw new Error('STARTTLS failed');
+        }
+        await this._handshakeTls();
+        this._input = this._connection.get_input_stream();
+        this._output = this._connection.get_output_stream();
+    }
+
+    _quoteString(str) {
+        return '"' + str.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+    }
+
     async _login() {
-        const response = await this._sendCommand('LOGIN', `"${this._username}" "${this._password}"`);
+        const user = this._quoteString(this._username);
+        const pass = this._quoteString(this._password);
+        const response = await this._sendCommand('LOGIN', `${user} ${pass}`);
         if (!response.includes('OK')) {
             throw new Error('IMAP login failed');
         }
@@ -67,18 +92,22 @@ export class ImapClient {
             return [];
         }
 
-        return match[1].trim().split(' ').filter(id => id);
+        return match[1]
+            .trim()
+            .split(' ')
+            .filter((id) => id);
     }
 
-    async fetchMessages(messageIds) {
+    async fetchMessages(messageIds, limit = 10) {
         if (messageIds.length === 0) {
             return [];
         }
 
-        const idRange = messageIds.join(',');
+        const limited = messageIds.slice(-limit);
+        const idRange = limited.join(',');
         const response = await this._sendCommand(
             'FETCH',
-            `${idRange} (UID BODY.PEEK[HEADER.FIELDS (FROM SUBJECT MESSAGE-ID)])`
+            `${idRange} (UID BODY.PEEK[HEADER.FIELDS (FROM SUBJECT MESSAGE-ID)])`,
         );
 
         return this._parseMessages(response);
@@ -101,57 +130,45 @@ export class ImapClient {
         const cmd = args ? `${tag} ${command} ${args}\r\n` : `${tag} ${command}\r\n`;
 
         const bytes = new GLib.Bytes(new TextEncoder().encode(cmd));
-        await this._output.write_bytes_async(
-            bytes,
-            GLib.PRIORITY_DEFAULT,
-            this._cancellable
-        );
+        await this._output.write_bytes_async(bytes, GLib.PRIORITY_DEFAULT, this._cancellable);
 
         return await this._readResponse(tag);
     }
 
     async _readResponse(tag = null) {
-        let response = '';
-
         while (true) {
             const bytes = await this._input.read_bytes_async(
                 4096,
                 GLib.PRIORITY_DEFAULT,
-                this._cancellable
+                this._cancellable,
             );
 
             if (bytes.get_size() === 0) {
                 break;
             }
 
-            const chunk = new TextDecoder('utf-8').decode(bytes.get_data());
-            this._buffer += chunk;
-            response += chunk;
+            this._buffer += new TextDecoder('utf-8').decode(bytes.get_data());
 
-            // Check if we have a complete response
             if (tag) {
-                if (this._buffer.includes(`${tag} OK`) || this._buffer.includes(`${tag} NO`) || this._buffer.includes(`${tag} BAD`)) {
+                if (
+                    this._buffer.includes(`${tag} OK`) ||
+                    this._buffer.includes(`${tag} NO`) ||
+                    this._buffer.includes(`${tag} BAD`)
+                ) {
                     const result = this._buffer;
                     this._buffer = '';
                     return result;
                 }
             } else {
-                // For untagged responses (like greeting)
                 if (this._buffer.includes('\r\n')) {
                     const result = this._buffer;
                     this._buffer = '';
                     return result;
                 }
             }
-
-            // Add small delay to allow more data to arrive
-            await new Promise(resolve => GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
-                resolve();
-                return GLib.SOURCE_REMOVE;
-            }));
         }
 
-        return response;
+        return this._buffer;
     }
 
     _parseMessages(response) {
@@ -159,14 +176,17 @@ export class ImapClient {
         const lines = response.split('\n');
         let currentMessage = null;
         let currentHeaders = '';
+        let currentUid = null;
 
         for (const line of lines) {
             const fetchMatch = line.match(/\* (\d+) FETCH/);
             if (fetchMatch) {
                 if (currentMessage && currentHeaders) {
-                    messages.push(this._parseHeaders(currentMessage, currentHeaders));
+                    messages.push(this._parseHeaders(currentUid || currentMessage, currentHeaders));
                 }
                 currentMessage = fetchMatch[1];
+                const uidMatch = line.match(/UID (\d+)/);
+                currentUid = uidMatch ? uidMatch[1] : null;
                 currentHeaders = '';
             } else if (currentMessage) {
                 currentHeaders += line + '\n';
@@ -174,21 +194,62 @@ export class ImapClient {
         }
 
         if (currentMessage && currentHeaders) {
-            messages.push(this._parseHeaders(currentMessage, currentHeaders));
+            messages.push(this._parseHeaders(currentUid || currentMessage, currentHeaders));
         }
 
         return messages;
     }
 
-    _parseHeaders(seqNum, headers) {
-        const fromMatch = headers.match(/From: (.+)/i);
-        const subjectMatch = headers.match(/Subject: (.+)/i);
-        const messageIdMatch = headers.match(/Message-ID: <(.+?)>/i);
+    _unfoldHeaders(raw) {
+        return raw.replace(/\r?\n[ \t]/g, ' ');
+    }
+
+    _decodeMimeWord(encoded) {
+        try {
+            const match = encoded.match(/=\?([^?]+)\?([BbQq])\?([^?]*)\?=/);
+            if (!match) return encoded;
+
+            const [, charset, encoding, data] = match;
+
+            if (encoding.toUpperCase() === 'B') {
+                const bytes = GLib.base64_decode(data);
+                return new TextDecoder(charset).decode(bytes);
+            }
+
+            if (encoding.toUpperCase() === 'Q') {
+                const decoded = data
+                    .replace(/_/g, ' ')
+                    .replace(/=([0-9A-Fa-f]{2})/g, (_, hex) =>
+                        String.fromCharCode(parseInt(hex, 16)),
+                    );
+                return new TextDecoder(charset).decode(
+                    new Uint8Array([...decoded].map((c) => c.charCodeAt(0))),
+                );
+            }
+
+            return encoded;
+        } catch {
+            return encoded;
+        }
+    }
+
+    _decodeMime(str) {
+        if (!str) return str;
+        return str
+            .replace(/\?=\s+=\?/g, '?==?')
+            .replace(/=\?[^?]+\?[BbQq]\?[^?]*\?=/g, (match) => this._decodeMimeWord(match));
+    }
+
+    _parseHeaders(uid, headers) {
+        const unfolded = this._unfoldHeaders(headers);
+        const fromMatch = unfolded.match(/From: (.+)/i);
+        const subjectMatch = unfolded.match(/Subject: (.+)/i);
+        const messageIdMatch = unfolded.match(/Message-ID: <(.+?)>/i);
 
         return {
-            id: messageIdMatch ? messageIdMatch[1] : `msg_${seqNum}`,
-            subject: subjectMatch ? subjectMatch[1].trim() : '(No subject)',
-            from: fromMatch ? fromMatch[1].trim() : '(Unknown sender)',
+            id: messageIdMatch ? messageIdMatch[1] : `uid_${uid}`,
+            subject: this._decodeMime(subjectMatch ? subjectMatch[1].trim() : '(No subject)'),
+            from: this._decodeMime(fromMatch ? fromMatch[1].trim() : '(Unknown sender)'),
             link: null,
         };
     }

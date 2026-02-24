@@ -23,8 +23,6 @@ export class Account {
         this._source = null;
         this._failCount = 0;
 
-        // Determine if this is an OAuth2 or IMAP account
-        this._isOAuth2 = !!goaAccount.get_oauth2_based();
         this._mail = goaAccount.get_mail();
     }
 
@@ -52,13 +50,10 @@ export class Account {
     }
 
     async _fetchMessages() {
-        if (this._isOAuth2) {
-            return await this._fetchMessagesOAuth2();
-        } else if (this._providerType === 'imap') {
+        if (this._providerType === 'imap_smtp') {
             return await this._fetchMessagesIMAP();
-        } else {
-            throw new Error(`Unsupported provider type: ${this._providerType}`);
         }
+        return await this._fetchMessagesOAuth2();
     }
 
     async _fetchMessagesOAuth2() {
@@ -89,37 +84,37 @@ export class Account {
             throw new Error('IMAP account does not have Mail interface');
         }
 
-        const host = this._mail.email_address.split('@')[1]; // Fallback if ImapHost not set
-        const imapHost = this._mail.imap_host || host;
+        if (!this._mail.imap_host) {
+            throw new Error('IMAP account is missing imap_host configuration');
+        }
+
+        if (!this._mail.imap_use_ssl && !this._mail.imap_use_tls) {
+            throw new Error('IMAP requires SSL/TLS or STARTTLS');
+        }
+
+        const useStartTls = !this._mail.imap_use_ssl && this._mail.imap_use_tls;
+        const defaultPort = useStartTls ? 143 : 993;
+
+        const [host, portStr] = this._mail.imap_host.split(':');
+        const port = portStr ? parseInt(portStr, 10) : defaultPort;
         const imapUserName = this._mail.imap_user_name || this._mail.email_address;
 
-        // Get password from GOA - this requires using the passwordbased interface
         const passwordBased = this.goaAccount.get_password_based();
         if (!passwordBased) {
             throw new Error('IMAP account does not have password');
         }
 
-        const [password] = await new Promise((resolve, reject) => {
-            passwordBased.call_get_password(
-                'password',
-                this._cancellable,
-                (source, result) => {
-                    try {
-                        const [password] = passwordBased.call_get_password_finish(result);
-                        resolve([password]);
-                    } catch (err) {
-                        reject(err);
-                    }
-                }
-            );
-        });
+        const [password] = await passwordBased.call_get_password(
+            'imap-password',
+            this._cancellable,
+        );
 
         return await this._provider.fetchMessages({
-            host: imapHost,
-            port: this._mail.imap_use_ssl ? 993 : (this._mail.imap_use_tls ? 143 : 143),
+            host,
+            port,
             username: imapUserName,
             password,
-            useTls: this._mail.imap_use_ssl || this._mail.imap_use_tls,
+            useStartTls,
             cancellable: this._cancellable,
             logger: this._logger,
         });
@@ -191,9 +186,10 @@ export class Account {
     }
 
     _openEmail(link) {
+        const url = link || this._provider.getFallbackURL();
         const useMailClient = this._settings.get_boolean('use-mail-client');
 
-        if (useMailClient) {
+        if (!url || useMailClient) {
             const mailto = Gio.app_info_get_default_for_uri_scheme('mailto');
             if (mailto) {
                 mailto.launch([], null);
@@ -201,6 +197,8 @@ export class Account {
             }
         }
 
-        Gio.AppInfo.launch_default_for_uri(link || this._provider.getFallbackURL(), null);
+        if (url) {
+            Gio.AppInfo.launch_default_for_uri(url, null);
+        }
     }
 }

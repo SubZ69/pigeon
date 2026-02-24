@@ -67,15 +67,13 @@ const microsoftProvider = {
 };
 
 const imapProvider = {
-    // IMAP provider works differently - it needs to establish a connection
-    // and doesn't use REST API calls
-    async fetchMessages({ host, port, username, password, useTls, cancellable, logger }) {
+    async fetchMessages({ host, port, username, password, useStartTls, cancellable, logger }) {
         const client = new ImapClient({
             host,
             port,
             username,
             password,
-            useTls,
+            useStartTls,
             cancellable,
             logger,
         });
@@ -85,21 +83,19 @@ const imapProvider = {
             await client.selectMailbox('INBOX');
             const unreadIds = await client.searchUnread();
             const messages = await client.fetchMessages(unreadIds);
-            await client.logout();
             return messages;
-        } catch (err) {
+        } finally {
             await client.logout();
-            throw err;
         }
     },
 
     getFallbackURL() {
-        return null; // IMAP doesn't have a web interface
+        return null;
     },
 };
 
 export const providers = {
     google: googleProvider,
     ms_graph: microsoftProvider,
-    imap: imapProvider,
+    imap_smtp: imapProvider,
 };

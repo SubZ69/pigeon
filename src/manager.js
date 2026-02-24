@@ -14,6 +14,10 @@ Gio._promisify(Goa.Client, 'new', 'new_finish');
 Gio._promisify(Goa.OAuth2Based.prototype, 'call_get_access_token', 'call_get_access_token_finish');
 Gio._promisify(Goa.PasswordBased.prototype, 'call_get_password', 'call_get_password_finish');
 Gio._promisify(Soup.Session.prototype, 'send_and_read_async', 'send_and_read_finish');
+Gio._promisify(Gio.SocketClient.prototype, 'connect_to_host_async', 'connect_to_host_finish');
+Gio._promisify(Gio.InputStream.prototype, 'read_bytes_async', 'read_bytes_finish');
+Gio._promisify(Gio.OutputStream.prototype, 'write_bytes_async', 'write_bytes_finish');
+Gio._promisify(Gio.DtlsConnection.prototype, 'handshake_async', 'handshake_finish');
 
 export class Manager {
     constructor({ logger, settings }) {
@@ -95,21 +99,7 @@ export class Manager {
     _createAccounts() {
         return this._goaClient
             .get_accounts()
-            .filter((goaAccount) => {
-                const providerType = goaAccount.get_account().provider_type;
-
-                // Check if provider type is supported
-                if (!SUPPORTED_PROVIDERS.has(providerType)) {
-                    return false;
-                }
-
-                // For IMAP accounts, ensure they have the Mail interface
-                if (providerType === 'imap') {
-                    return !!goaAccount.get_mail();
-                }
-
-                return true;
-            })
+            .filter((acc) => SUPPORTED_PROVIDERS.has(acc.get_account().provider_type))
             .map((goaAccount) => new Account({ goaAccount, ...this._accountOptions }));
     }
 
