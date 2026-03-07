@@ -1,0 +1,84 @@
+# Occitan translation file
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the pigeon@subz69.github package.
+# Quentin PAGÈS, 2026
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: pigeon@subz69.github\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-24 20:59+0100\n"
+"PO-Revision-Date: 2026-03-07 19:48+0100\n"
+"Last-Translator: Quentin PAGÈS\n"
+"Language-Team: \n"
+"Language: oc\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.8\n"
+
+#: src/account.js
+#, javascript-format
+msgid "Unable to check emails: %s"
+msgstr "Verificacion impossibla dels corrièls : %s"
+
+#: src/manager.js
+msgid "Error loading email accounts"
+msgstr "Error de cargament dels de corrièr"
+
+#: src/prefs.js
+msgid "Notifications"
+msgstr "Notificacions"
+
+#: src/prefs.js
+msgid "Configure notification behavior"
+msgstr "Configurar lo compòrtament de las notificacions"
+
+#: src/prefs.js
+msgid "Priority only"
+msgstr "Prioritaris solament"
+
+#: src/prefs.js
+msgid "Only notify for important emails"
+msgstr "Avertir unicament pels corrièls importants"
+
+#: src/prefs.js
+msgid "Check interval"
+msgstr "Relambi de verificacion"
+
+#: src/prefs.js
+msgid "Time in seconds between email checks"
+msgstr "Interval en segondas entre las verificacions de corrièls"
+
+#: src/prefs.js
+msgid "Play sound"
+msgstr "Emetre un son"
+
+#: src/prefs.js
+msgid "Play a notification sound when new emails arrive"
+msgstr "Emetre un son de notificacion quand de corrièls novèls arriban"
+
+#: src/prefs.js
+msgid "Persistent notifications"
+msgstr "Notificacions persistentas"
+
+#: src/prefs.js
+msgid "Keep notifications visible until dismissed"
+msgstr "Daissar las notificacions visiblas dusca las ignorar"
+
+#: src/prefs.js
+msgid "Email Client"
+msgstr "Client de messatjariá"
+
+#: src/prefs.js
+msgid "Configure how to open emails"
+msgstr "Configurar cossí dobrir los corrièls"
+
+#: src/prefs.js
+msgid "Use default email client"
+msgstr "Utilizar lo client de corrièl per defaut"
+
+#: src/prefs.js
+msgid "Launch mail client when clicking notifications"
+msgstr "Lançar lo client de corrièl en clicant las notificacions"
