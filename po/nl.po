@@ -1,0 +1,84 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the pigeon@subz69.github package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: pigeon@subz69.github\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-24 20:59+0100\n"
+"PO-Revision-Date: 2026-03-07 10:45+0100\n"
+"Last-Translator: Heimen Stoffels <vistausss@fastmail.com>\n"
+"Language-Team: \n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.8\n"
+
+#: src/account.js
+#, javascript-format
+msgid "Unable to check emails: %s"
+msgstr "Het controleren op nieuwe e-mails is mislukt: %s"
+
+#: src/manager.js
+msgid "Error loading email accounts"
+msgstr "De e-mailaccounts kunnen niet worden geladen"
+
+#: src/prefs.js
+msgid "Notifications"
+msgstr "Meldingen"
+
+#: src/prefs.js
+msgid "Configure notification behavior"
+msgstr "Stel uw meldingsvoorkeuren in"
+
+#: src/prefs.js
+msgid "Priority only"
+msgstr "Alleen e-mails met prioriteit"
+
+#: src/prefs.js
+msgid "Only notify for important emails"
+msgstr "Toon alleen meldingen voor belangrijke e-mails"
+
+#: src/prefs.js
+msgid "Check interval"
+msgstr "Controleren, elke"
+
+#: src/prefs.js
+msgid "Time in seconds between email checks"
+msgstr "De tijd (in seconden) tussen het controleren op nieuwe e-mails"
+
+#: src/prefs.js
+msgid "Play sound"
+msgstr "Geluid afspelen"
+
+#: src/prefs.js
+msgid "Play a notification sound when new emails arrive"
+msgstr "Speel een geluid af zodra er nieuwe mails binnenkomen"
+
+#: src/prefs.js
+msgid "Persistent notifications"
+msgstr "Meldingen in het zicht houden"
+
+#: src/prefs.js
+msgid "Keep notifications visible until dismissed"
+msgstr "Houd meldingen in het zicht totdat u ze wegklikt"
+
+#: src/prefs.js
+msgid "Email Client"
+msgstr "E-mailprogramma"
+
+#: src/prefs.js
+msgid "Configure how to open emails"
+msgstr "Geef aan met welk programma e-mails moeten worden geopend"
+
+#: src/prefs.js
+msgid "Use default email client"
+msgstr "Standaard e-mailprogramma gebruiken"
+
+#: src/prefs.js
+msgid "Launch mail client when clicking notifications"
+msgstr "Open het standaard e-mailprogramma na het aanklikken van een melding"
