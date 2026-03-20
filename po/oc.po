@@ -9,14 +9,15 @@ msgstr ""
 "Project-Id-Version: pigeon@subz69.github\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-03-16 18:03+0100\n"
-"PO-Revision-Date: 2026-03-07 19:48+0100\n"
+"PO-Revision-Date: 2026-03-20 14:59+0100\n"
 "Last-Translator: Quentin PAGÈS\n"
 "Language-Team: \n"
 "Language: oc\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.9\n"
 
 #: src/account.js
 #, javascript-format
@@ -27,16 +28,16 @@ msgstr "Verificacion impossibla dels corrièls : %s"
 #, javascript-format
 msgid "You have %d unread email"
 msgid_plural "You have %d unread emails"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Avètz %d corrièl non legit"
+msgstr[1] "Avètz %d corrièls non legits"
 
 #: src/account.js
 msgid "(No subject)"
-msgstr ""
+msgstr "(Sens objècte)"
 
 #: src/manager.js
 msgid "Error loading email accounts"
-msgstr "Error de cargament dels de corrièr"
+msgstr "Error de cargament dels comptes de corrièr"
 
 #: src/prefs.js
 msgid "Notifications"
@@ -63,15 +64,16 @@ msgid "Time in seconds between email checks"
 msgstr "Interval en segondas entre las verificacions de corrièls"
 
 #: src/prefs.js
-#, fuzzy
 msgid "Group notifications"
-msgstr "Notificacions"
+msgstr "Gropar las notificacions"
 
 #: src/prefs.js
 msgid ""
 "Show a summary instead of individual notifications when exceeding this count "
 "(0 to disable)"
 msgstr ""
+"Afichar un resumit a la plaça de notificacions individualas al delai "
+"d’aqueste nombre (0 per desactivar)"
 
 #: src/prefs.js
 msgid "Play sound"
