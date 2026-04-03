@@ -2,7 +2,7 @@
   "name": "Pigeon Email Notifier",
   "description": "Email notifier for Gmail, Outlook, and IMAP using GNOME Online Accounts\n\nRequirements:\n- A Google, Microsoft, or IMAP account configured in Settings > Online Accounts\n- Debian-based: sudo apt install gir1.2-goa-1.0 gir1.2-xmlb-2.0\n- openSUSE: sudo zypper install typelib-1_0-Goa-1_0 typelib-1_0-Xmlb-1_0\n- Gentoo: Ensure dev-libs/libxmlb is installed with the introspection USE flag\n- Log out and back in after installing dependencies",
   "shell-version": ["48", "49", "50"],
-  "version-name": "50.2",
+  "version-name": "50.3",
   "url": "https://github.com/subz69/pigeon",
   "uuid": "pigeon@subz69.github",
   "settings-schema": "org.gnome.shell.extensions.pigeon",
