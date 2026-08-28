@@ -46,8 +46,8 @@ export class Account {
         }
     }
 
-    async _fetchMessages() {
-        return await this._provider.fetchMessages({
+    _fetchMessages() {
+        return this._provider.fetchMessages({
             goaObject: this.goaAccount,
             cancellable: this._cancellable,
             httpSession: this._httpSession,

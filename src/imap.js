@@ -132,7 +132,7 @@ export class ImapClient {
         const bytes = new GLib.Bytes(new TextEncoder().encode(cmd));
         await this._output.write_bytes_async(bytes, GLib.PRIORITY_DEFAULT, this._cancellable);
 
-        return await this._readResponse(tag);
+        return this._readResponse(tag);
     }
 
     async _readResponse(tag = null) {

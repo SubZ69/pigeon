@@ -31,8 +31,8 @@ async function fetchMessagesOAuth2(
 }
 
 const googleProvider = {
-    async fetchMessages(params) {
-        return await fetchMessagesOAuth2(this, params);
+    fetchMessages(params) {
+        return fetchMessagesOAuth2(this, params);
     },
 
     getApiURL(priorityOnly) {
@@ -85,8 +85,8 @@ const googleProvider = {
 };
 
 const microsoftProvider = {
-    async fetchMessages(params) {
-        return await fetchMessagesOAuth2(this, params);
+    fetchMessages(params) {
+        return fetchMessagesOAuth2(this, params);
     },
 
     getInboxURL() {
