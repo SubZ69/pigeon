@@ -1,0 +1,9 @@
+{
+  "name": "pigeon-email-notifier",
+  "private": true,
+  "type": "commonjs",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.1"
+  }
+}
