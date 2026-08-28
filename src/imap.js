@@ -139,6 +139,7 @@ export class ImapClient {
         const terminator = tag ? new RegExp(`${tag} (OK|NO|BAD)`) : /\r\n/;
 
         while (true) {
+            // eslint-disable-next-line no-await-in-loop -- sequential socket reads, each chunk depends on the previous one
             const bytes = await this._input.read_bytes_async(
                 4096,
                 GLib.PRIORITY_DEFAULT,
