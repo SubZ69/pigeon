@@ -7,10 +7,13 @@ JS_FILES = $(wildcard src/*.js)
 VERSION = $(shell grep -o '"version-name": *"[^"]*"' src/metadata.json | cut -d'"' -f4)
 ZIP = $(UUID).shell-extension.zip
 
-.PHONY: all install uninstall po new-po release clean help
+.PHONY: all install uninstall po new-po release lint clean help
 
 all:
 	@gnome-extensions pack --force --podir=../po --extra-source=manager.js --extra-source=account.js --extra-source=providers.js --extra-source=imap.js src
+
+lint:
+	@uvx shexli $(CURDIR)/src
 
 po:
 	@xgettext --from-code=UTF-8 \
@@ -56,6 +59,7 @@ help:
 	@echo "  make                 Create extension package"
 	@echo "  make install         Build and install extension"
 	@echo "  make uninstall       Remove installed extension"
+	@echo "  make lint            Run shexli"
 	@echo "  make po              Update translations"
 	@echo "  make new-po LANG=xx  Create new translation (e.g., LANG=it)"
 	@echo "  make release         Create GitHub release with zip"
