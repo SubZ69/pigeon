@@ -194,7 +194,7 @@ export class ImapClient {
                         String.fromCharCode(parseInt(hex, 16)),
                     );
                 return new TextDecoder(charset).decode(
-                    new Uint8Array([...decoded].map((c) => c.charCodeAt(0))),
+                    Uint8Array.from(decoded, (c) => c.charCodeAt(0)),
                 );
             }
 
